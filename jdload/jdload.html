@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Anim</title>
+    <style>
+        body { font-family: Arial; color: #ff6a00; background-color: #000; margin: 0px; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <script src="../three/build/three.min.js"></script>
+    <script src="../three/build/OrbitControls.js"></script>
+    <script src="../three/build/JDLoader.min.js"></script>
+    <script type="x-shader/x-vertex" id="vertexShader">
+        attribute float size;
+        attribute vec4 color;
+        attribute float birthTime;
+
+        varying vec4 vColor;
+
+        uniform float time;
+        uniform float velocity;
+        uniform vec3 direction;
+
+        void main() {
+            float vTime = 1.0 - step(birthTime, fract(time)) + (fract(time)-birthTime);
+            vec3 offset = direction * vTime * velocity;
+            vec4 mvPosition = modelViewMatrix * vec4( position + offset, 1.0 );
+            vColor = color;
+            gl_PointSize = size * (1.0 - vTime);
+            gl_Position = projectionMatrix * mvPosition;
+        }
+    </script>
+    <script type="x-shader/x-fragment" id="fragmentShader">
+        varying vec4 vColor;
+        uniform sampler2D texture;
+        void main() {
+            gl_FragColor = vColor;
+            gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+        }
+    </script>
+
+    <script>
+        var meshes = [], mixers = [], hemisphereLight, pointLight, camera, scene, renderer, controls, shaderMesh;
+        var clock = new THREE.Clock;
+
+        init();
+        animate();
+
+        function init()
+        {
+            container = document.createElement('div');
+            document.body.appendChild(container);
+            scene = new THREE.Scene();
+            scene.add(new THREE.AmbientLight(0xffffff, 1));
+
+            // var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+            // scene.add( light );
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            window.addEventListener('resize', onWindowResize, false);
+
+            var loader = new THREE.JDLoader();
+            loader.load("nanzhu.JD",
+                        function (data)
+                        {
+                            for (var i = 0; i < data.objects.length; ++i)
+                            {
+                                if (data.objects[i].type == "Mesh" || data.objects[i].type == "SkinnedMesh")
+                                {
+                                    var mesh = null;
+                                    var matArray = createMaterials(data);
+                                    if (data.objects[i].type == "SkinnedMesh")
+                                    {
+                                        mesh = new THREE.SkinnedMesh(data.objects[i].geometry, matArray);
+                                    }
+                                    else // Mesh
+                                    {
+                                        mesh = new THREE.Mesh(data.objects[i].geometry, matArray);
+                                    }
+
+                                    scene.add(mesh);
+                                    var helper = new THREE.SkeletonHelper( mesh );
+                                    helper.material.linewidth = 3;
+                                    scene.add( helper );
+
+                                    if (mesh && mesh.geometry.animations)
+                                    {
+                                        var mixer = new THREE.AnimationMixer(mesh);
+                                        mesh.mixer = mixer
+                                        mixers.push(mixer);
+                                        var action = mixer.clipAction( mesh.geometry.animations[0] );
+                                        mixer.clipAction( mesh.geometry.animations[1] );
+                                        action.play();
+                                    }
+                                    meshes.push(mesh);
+                                }
+                                else if (data.objects[i].type == "Line")
+                                {
+                                    var jd_color = data.objects[i].jd_object.color;
+                                    var color1 = new THREE.Color( jd_color[0] / 255, jd_color[1] / 255, jd_color[2] / 255 );
+                                    var material = new THREE.LineBasicMaterial({ color: color1}); //{ color: new THREE.Color( 0xff0000 ) }
+                                    var line = new THREE.Line(data.objects[i].geometry, material);
+                                    scene.add(line);
+
+                                    if (line.geometry.animations)
+                                    {
+                                        var mixer = new THREE.AnimationMixer(line);
+                                        mixers.push(mixer);
+                                        var action = mixer.clipAction(line.geometry.animations[0]);
+                                        mixer.clipAction(line.geometry.animations[1]);
+                                        action.play();
+                                    }
+                                }
+                            }
+
+                            var near = 1, far = 10 * data.boundingSphere.radius;
+                            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, near, far);
+                            camera.position.z = data.boundingSphere.center.z + 2.5 * data.boundingSphere.radius;
+                            camera.lookAt(data.boundingSphere.center);
+                            camera.add(new THREE.DirectionalLight(0xFFFFFF, 1));
+                            scene.add(camera);
+
+                            if (!controls)
+                               controls = new THREE.OrbitControls(camera, renderer.domElement);
+                            controls.target.copy(data.boundingSphere.center);
+
+                            initShaderObject(data.boundingSphere.center);
+                        });
+
+
+        }
+        function play(animationName) {
+            // 播放动画
+            for(var i=0;i<meshes.length;i++) {
+                var mesh = this.meshes[i];
+                if (mesh && mesh.geometry.animations && mesh.mixer)
+                {
+                    var clips = mesh.geometry.animations;
+                    var clip = THREE.AnimationClip.findByName( clips, animationName );
+                    console.log('play')
+                    console.log(clip)
+                    //mesh.mixer.stopAllAction()
+                    var action = mesh.mixer.existingAction ( clip );
+                    console.log(action)
+                    if(action){
+                        action.play();
+                    }
+
+                }
+            }
+            this.paused = false;
+        }
+
+        function createMaterials(data)
+        {
+            var matArray = [];
+            for (var j = 0; j < data.materials.length; ++j)
+            {
+                var mat = new THREE.MeshPhongMaterial({});
+                mat.copy(data.materials[j]);
+                //mat.transparent = true;
+                matArray.push(mat);
+            }
+            return matArray;
+        }
+
+
+
+        function animate()
+        {
+            var delta = clock.getDelta();
+            for (var i = 0; i < mixers.length; ++i)
+                mixers[i].update(delta);
+
+            if (controls) controls.update();
+
+            if (camera)  renderer.render(scene, camera);
+
+            if(shaderMesh) {
+                shaderMesh.material.uniforms.time.value += delta * 0.5;
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function onWindowResize()
+        {
+            if (camera)
+            {
+              camera.aspect = window.innerWidth / window.innerHeight;
+              camera.updateProjectionMatrix();
+            }
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+
+        function initShaderObject(address) {
+            var count = 1000; // 粒子数量
+            var color = new THREE.Color( 0xff0000 ); // 粒子颜色
+            var radius = 50; // 粒子生成半径
+            var direction = new THREE.Vector3(0,0,1); // 粒子运动方向，往Z轴方向
+            var velocity = 500; // 粒子运动速度
+            var size = 40; // 粒子大小
+
+            var geometry = new THREE.BufferGeometry();
+            var positions = [];
+            var colors = [];
+            var birthTime = [];
+            var sizes = [];
+            for(var i=0; i<count; i++) {
+                positions.push( (0.5 - Math.random())*radius,  (0.5 - Math.random())*radius, 1);
+                colors.push(color.r, color.g, color.b, 1.0);
+                sizes.push(size);
+                birthTime.push(Math.random());
+            }
+            geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3 ) );
+            geometry.addAttribute('color',  new THREE.BufferAttribute( new Float32Array(colors), 4 ));
+            geometry.addAttribute('size', new THREE.BufferAttribute( new Float32Array(sizes), 1));
+            geometry.addAttribute('birthTime', new THREE.BufferAttribute( new Float32Array(birthTime), 1));
+
+            var shaderMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 1.0 },
+                    direction: { value: direction },
+                    velocity: { value: velocity },
+                    texture: { value: new THREE.TextureLoader().load( "dot.png" ) }
+                },
+                vertexShader: document.getElementById( 'vertexShader' ).textContent,
+                fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+            })
+
+            shaderMesh = new THREE.Points(geometry, shaderMaterial);
+            shaderMesh.position.x = address.x;
+            shaderMesh.position.y = address.y;
+            shaderMesh.position.z = address.z;
+            scene.add(shaderMesh);
+        }
+
+
+    </script>
+</body>
+</html>

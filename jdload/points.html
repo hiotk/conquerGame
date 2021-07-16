@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Anim</title>
+    <style>
+        body { font-family: Arial; color: #ff6a00; background-color: #000; margin: 0px; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <script src="../three/build/three.min.js"></script>
+    <script src="../three/build/OrbitControls.js"></script>
+    <script src="../three/build/JDLoader.min.js"></script>
+    <script src="../three/build/tween.js"></script>
+    <script type="x-shader/x-vertex" id="vertexShader">
+        attribute float size;
+        attribute vec4 color;
+        attribute float birthTime;
+
+        varying vec4 vColor;
+
+        uniform float time;
+        uniform float velocity;
+        uniform vec3 direction;
+
+        void main() {
+            float vTime = 1.0 - step(birthTime, fract(time)) + (fract(time)-birthTime);
+            vec3 offset = direction * vTime * velocity;
+            vec4 mvPosition = modelViewMatrix * vec4( position + offset, 1.0 );
+            vColor = color;
+            gl_PointSize = size * (1.0 - vTime);
+            gl_Position = projectionMatrix * mvPosition;
+        }
+    </script>
+    <script type="x-shader/x-fragment" id="fragmentShader">
+        varying vec4 vColor;
+        uniform sampler2D texture;
+        void main() {
+            gl_FragColor = vColor;
+            gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+        }
+    </script>
+
+    <script>
+        var meshes = [], mixers = [], hemisphereLight, pointLight, camera, scene, renderer, controls, shaderMesh;
+        var clock = new THREE.Clock;
+
+        init();
+        animate();
+
+        function init()
+        {
+            container = document.createElement('div');
+            document.body.appendChild(container);
+            scene = new THREE.Scene();
+            scene.add(new THREE.AmbientLight(0xffffff, 1));
+
+            // var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+            // scene.add( light );
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            window.addEventListener('resize', onWindowResize, false);
+
+
+            initShaderObject();
+
+
+            var near = 1, far = 1000;
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, near, far);
+            camera.position.z = 100;
+            camera.lookAt(shaderMesh.position);
+            camera.add(new THREE.DirectionalLight(0xFFFFFF, 1));
+            scene.add(camera);
+
+            if (!controls)
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+        }
+
+        function createMaterials(data)
+        {
+            var matArray = [];
+            for (var j = 0; j < data.materials.length; ++j)
+            {
+                var mat = new THREE.MeshPhongMaterial({});
+                mat.copy(data.materials[j]);
+                //mat.transparent = true;
+                matArray.push(mat);
+            }
+            return matArray;
+        }
+
+
+        
+        function animate(time)
+        {
+            var delta = clock.getDelta();
+            for (var i = 0; i < mixers.length; ++i)
+                mixers[i].update(delta);
+
+            if (controls) controls.update();
+
+            if (camera)  renderer.render(scene, camera);
+
+            if(shaderMesh) {
+                shaderMesh.material.uniforms.time.value += delta * 0.5; 
+            }
+
+            TWEEN.update(time);
+
+            requestAnimationFrame(animate);
+        }
+
+        function onWindowResize()
+        {
+            if (camera)
+            {
+              camera.aspect = window.innerWidth / window.innerHeight;
+              camera.updateProjectionMatrix();
+            }
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function fract(value) {
+            if(value>0) {
+                return value - Math.floor(value);
+            } else {
+                return Math.ceil(value) - value;
+            }
+        }
+
+        function initShaderObject(address) {
+            var count = 10000; // 粒子数量
+            var color = new THREE.Color( 0x000000 ); // 粒子颜色
+            var radius = 2; // 粒子生成半径
+            var direction = new THREE.Vector3(0,0,1); // 往Z轴方向
+            var velocity = 10; // 粒子运动速度
+            var size = 40;
+
+            var geometry = new THREE.BufferGeometry();
+            var positions = [];
+            var randomPositons = [];
+            var colors = [];
+            var birthTime = [];
+            var sizes = [];
+            for(var i=0; i<count; i++) {
+                var position = [ (0.5 - Math.random())*radius,  (0.5 - Math.random())*radius, 1 ];
+                positions.push(...position);
+                randomPositons.push(...position)
+                colors.push(color.r+Math.round(Math.random()*128)/255, color.g+Math.round(Math.random()*128)/255, color.b+Math.round(Math.random()*128)/255, 1.0);
+                sizes.push(size);
+                birthTime.push(Math.random());
+            }
+            var positionAttr = new THREE.BufferAttribute(new Float32Array(positions), 3 );
+
+            positionAttr.needsUpdate = true;
+            geometry.addAttribute('position',  positionAttr);
+            geometry.addAttribute('randomPositon',  new THREE.BufferAttribute( new Float32Array(randomPositons), 3 ));
+            geometry.addAttribute('color',  new THREE.BufferAttribute( new Float32Array(colors), 4 ));
+            geometry.addAttribute('size', new THREE.BufferAttribute( new Float32Array(sizes), 1));
+            geometry.addAttribute('birthTime', new THREE.BufferAttribute( new Float32Array(birthTime), 1));
+
+            var shaderMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 1.0 },
+                    direction: { value: direction },
+                    velocity: { value: velocity },
+                    texture: { value: new THREE.TextureLoader().load( "dot.png" ) }
+                },
+                vertexShader: document.getElementById( 'vertexShader' ).textContent,
+                fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+                blending:       THREE.AdditiveBlending,
+                depthTest:      false,
+                transparent:    true
+            })
+
+
+
+            var pos = {val: 1};
+            function callback() {
+                // shaderMesh.position.set(pos.val*10, pos.val*20, 0);
+                var time = shaderMesh.material.uniforms.time.value;
+                var birthTimes = shaderMesh.geometry.attributes.birthTime;
+                var positions = shaderMesh.geometry.attributes.position;
+                var randomPositons = shaderMesh.geometry.attributes.randomPositon;
+                for(var i=0; i<count; i++) {
+                    var birthTime = birthTimes.getX(i);
+                    if(Math.abs(birthTime - fract(time))<0.1) {
+                        var randomPos = {x:randomPositons.getX(i),y: randomPositons.getY(i),z: randomPositons.getZ(i)}
+                        positions.setXYZ(i, pos.val*10+randomPos.x, pos.val*20+randomPos.y, 0+randomPos.z)
+                    }
+                }
+                positions.needsUpdate = true;
+            }
+            var tween = new TWEEN.Tween(pos).to({val: -1}, 2000).easing(TWEEN.Easing.Quadratic.InOut).onUpdate(callback);
+            var tweenBack = new TWEEN.Tween(pos).to({val: 1}, 2000).easing(TWEEN.Easing.Quadratic.InOut).onUpdate(callback);
+            tween.chain(tweenBack);
+            tweenBack.chain(tween);
+            tween.start();
+            
+            shaderMesh = new THREE.Points(geometry, shaderMaterial);
+            scene.add(shaderMesh);
+        }
+
+    </script>
+</body>
+</html>

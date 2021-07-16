@@ -1,0 +1,7 @@
+walk:0-24
+huirt:31-51
+attack:87-81
+chidongxi:86-116
+sajiamaimeng:120-158
+tiaowu:163-227
+shuijiao:235-295

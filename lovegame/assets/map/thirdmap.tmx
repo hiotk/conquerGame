@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.1" orientation="orthogonal" renderorder="right-down" width="50" height="50" tilewidth="16" tileheight="16" infinite="1" nextlayerid="11" nextobjectid="1">
+ <tileset firstgid="1" name="tileset1" tilewidth="16" tileheight="16" tilecount="14063" columns="49">
+  <image source="tileset1.png" width="784" height="4600"/>
+  <tile id="0">
+   <animation>
+    <frame tileid="0" duration="300"/>
+    <frame tileid="1" duration="300"/>
+    <frame tileid="2" duration="300"/>
+    <frame tileid="3" duration="300"/>
+    <frame tileid="4" duration="300"/>
+    <frame tileid="5" duration="300"/>
+    <frame tileid="6" duration="300"/>
+    <frame tileid="7" duration="300"/>
+   </animation>
+  </tile>
+  <tile id="98">
+   <animation>
+    <frame tileid="98" duration="300"/>
+    <frame tileid="99" duration="300"/>
+    <frame tileid="100" duration="300"/>
+    <frame tileid="101" duration="300"/>
+    <frame tileid="102" duration="300"/>
+   </animation>
+  </tile>
+ </tileset>
+ <layer id="1" name="water" width="50" height="50">
+  <data encoding="base64" compression="zlib">
+   <chunk x="0" y="-32" width="16" height="16">
+   eJxjYBgFo2BwgRMSA+2CkQMAQncA4Q==
+  </chunk>
+   <chunk x="0" y="-16" width="16" height="16">
+   eJxjYBh6IEKKgSFSaqBdQX8gJU2cOkY0TCqA6auQpkz/Sgr1U+r+Uf2E9QMA7aYClA==
+  </chunk>
+   <chunk x="0" y="0" width="16" height="16">
+   eJxjYMAEjGiYVDDU9Y+CUTBSAAA8YAAR
+  </chunk>
+  </data>
+ </layer>
+ <layer id="3" name="floor" width="50" height="50">
+  <data encoding="base64" compression="zlib">
+   <chunk x="0" y="-32" width="16" height="16">
+   eJxjYBgFQwG0MjEwtDGRr38bUO92LPpB5oozE8bPgepeYFELMleSmXwM0u8FpL2ZsbvbB6oOlxqQ/mqguA4jdv21UP241MD06xKhH5saauhfA5RbC8TroGphfGxi6HxKwx8ADOseiw==
+  </chunk>
+   <chunk x="16" y="-32" width="16" height="16">
+   eJxjYBgFIxmIMyOwBDPp+iWZEdiTDP0g4EOh/tohrH8tUM86CvRTGv4AmJoG4g==
+  </chunk>
+   <chunk x="0" y="-16" width="16" height="16">
+   eJzbxsTAIMlMGHsBMTawjQkh740F+0D1VxPQD5LXZUTFOkBcS4H+3wyk6//FALEXZgZM/xogXgvF65DEYPpBbHEsGKYWV/hsIzL87wLxPSy4Aogr0fB6oJkboHgjAfN1oOEM8zeIfsCECJ9HTJjmI+PfUH3INLp+dHlkGh3g0o8N/8ISn9j0g8R+MWDS2kTarw21Dxs9FOz/xoAdg/QDAIR/XR4=
+  </chunk>
+   <chunk x="16" y="-16" width="16" height="16">
+   eJxjYIAAD2YGBk9mBrLBNqahqX8tMwQ/J1O/N1CPDxBLkhl+94B67lOgX5IZgcnRX8mMwFVk6P8NxDqMCJoc/dqMCHoU0BcAAGxzEJg=
+  </chunk>
+   <chunk x="0" y="0" width="16" height="16">
+   eJxjYEAFv4H4AROC/wjI/saAHWszMmCAoa5/FIyCkQQAy/QixQ==
+  </chunk>
+  </data>
+ </layer>
+ <layer id="8" name="growup" width="50" height="50">
+  <data encoding="base64" compression="zlib">
+   <chunk x="0" y="-32" width="16" height="16">
+   eJxjYBgFo2AUUAsIMlNHDb0AAByqACk=
+  </chunk>
+   <chunk x="0" y="-16" width="16" height="16">
+   eJxjYBg8IBkN01K/EzMZFoyCUTDMAAAPGgNe
+  </chunk>
+  </data>
+ </layer>
+ <layer id="4" name="object" width="50" height="50">
+  <data encoding="base64" compression="zlib">
+   <chunk x="0" y="-32" width="16" height="16">
+   eJztyzkKgDAURdFnshOnvVo5bchpQ069txFiCFhqkQun+PC+FIv9o9pIDVp06M37xm3gHjFhxhL49zduK/eGHQfOwL+/uasSKbVShhwFSvv8DW2+7gKrihcY
+  </chunk>
+   <chunk x="16" y="-32" width="16" height="16">
+   eJxjYBgFo2DgwGQmyvQfoVD/Vwr1qzFTpn+gAQDw1QJ8
+  </chunk>
+   <chunk x="0" y="-16" width="16" height="16">
+   eJxjYCAeiLIwMIgBsTgQSwCxJAuqvCUa5kLT7wZU7w7EHkDsCcReaPoJgXKg+gogrgTiKiCuJlH/CqD6lUC8CohXA/EaEvUPNEAPW8uBdQ5NQC4WMfR0BcPZWNRakWCXxah+BgB/AQ4f
+  </chunk>
+   <chunk x="16" y="-16" width="16" height="16">
+   eJyTYmFgkAZicoE3UK8PBfprgHprKdC/Fqh3HQX6BxpYDrQDRsGIBgDZ/QN6
+  </chunk>
+   <chunk x="0" y="0" width="16" height="16">
+   eJxjYEAFVgzEAwssYkNd/ygYBSMJAAA2WgHJ
+  </chunk>
+  </data>
+ </layer>
+ <layer id="5" name="building" width="50" height="50">
+  <data encoding="base64" compression="zlib">
+   <chunk x="0" y="-32" width="16" height="16">
+   eJxjYBgFo4A6II6JgSEeiBOAOBGIk5gIqxksIIKROmoGM3jCzMDwFIifAfFzIH4BxABlzwiw
+  </chunk>
+   <chunk x="16" y="-32" width="16" height="16">
+   eJxjYBgFo4B8kMQ00C4Y2eAlMwPDK2by9QMAJZMCPg==
+  </chunk>
+  </data>
+ </layer>
+ <layer id="6" name="above" width="50" height="50">
+  <data encoding="base64" compression="zlib"/>
+ </layer>
+</map>

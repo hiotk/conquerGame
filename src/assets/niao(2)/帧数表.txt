@@ -1,0 +1,7 @@
+walk:0-24
+hurt:30-50
+attack:55-79
+chidongxi:85-120
+sajiaomaimeng:125-170
+tiaowu:175-220
+shuijiao:225-275
